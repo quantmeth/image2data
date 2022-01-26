@@ -102,10 +102,12 @@ if(reduce != 1){
 
   if(reduce == "unique"){
 
+
     ifelse(precision >= 1 ,
-           D[,c("x", "y")]  <- round(D[,c("x", "y")], prevision),
+           D[,c("x", "y")]  <- round(D[,c("x", "y")], precision),
            D[,c("x", "y")]  <- round(D[,c("x", "y")] * precision, 1)
     )
+
     Unique <- unique(D[,c("x","y")])
     D <- data.frame(x = Unique[, "x"],
                    y = Unique[, "y"],
@@ -143,9 +145,12 @@ if(showplot){
        cex = .5)
 }
 
+<<<<<<< HEAD
 
 rownames(D) <- NULL
 
+=======
+>>>>>>> 568571f1e5bee4be43e686d99505d22527228b48
 return(DATA <- D)
 
 }
