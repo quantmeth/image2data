@@ -5,7 +5,7 @@
 #' @param path Path to image file.
 #' @param type Type of extraction of data. \code{type = "fill"} (default) returns the complete image as data whereas \code{type = "line"}
 #' returns a specific range of color (default is black).
-#' @param scaling Scale the data to a standardized form, \eqn{\mu = 0, \sigma = 1} (default is \code{TRUE}).
+#' @param scaling Tranform the data to a specified scale. Three options are available : \code{"standardized", "original", "normalized")}. \code{scaling = "standardized"} converts data in a standardized form, \eqn{\mu = 0, \sigma = 1} (default); \code{scaling = "normalized"} converts data in a normalized form (to unit vectors); and \code{scaling = "original"} keeps the data untransformed.   
 #' @param showplot Show a preliminary plot of the data (default is \code{TRUE}).
 #' @param reduce \code{reduce} can be a number \code{reduce > 0} or \code{reduce = "unique"}.  By default \code{reduce = 1}, so all pixels are returned. Specified values between \code{0} to \code{1} will return the corrresponding proportion of the pixels. Values over \code{1} will return the number of pixels (e.g., \code{reduce = 3} returns 3 data). If the chosen number is over the number of pixels, then random duplicates are added. If \code{reduce = "unique"} only unique elements (given a certain \code{precision}) are returned.
 #' @param A Transparency, otherwise known as \eqn{\alpha}. By default, only non transparent (\code{A = 1}) values are returned. Semi-transparent colors (\code{0 < A < 1}) are supported. Values between the \code{A} to \code{1} range will be return. If \code{A = 0}, all pixels are returned regardless of transparency.
@@ -31,7 +31,7 @@
 
 image2data <- function(path,
                        type = "fill",
-                       scaling = TRUE,
+                       scaling = "standardized",
                        showplot = TRUE,
                        reduce = 1,
                        A = 1,
@@ -41,28 +41,28 @@ image2data <- function(path,
                        Grey = NULL,
                        precision = 1,
                        seed = NULL) {
-
+  
   # Check if the file exists ####
   stopifnot("Incorrect path. The file was not found." = (file.exists(path)))
-
+  
   # Check extension ####
   extension <- (strsplit(basename(path), split="\\.")[[1]])
   extension <- extension[length(extension)]
   stopifnot("Incorrect file. Extension of the image is not compatible. \n
   #          Choose a .jpg, .png, .tiff or .bmp file" =
               (any(extension == c("jpg", "png", "tiff", "bmp"))))
-
+  
   # Import ####
   image <- readbitmap::read.bitmap(path)
   Dim <- dim(image)
-
+  
   # Extraction of colors in 2 dimensions ####
   if (length(Dim) < 3){
     RR <- GG <- BB <- image
   } else {
     RR <- image[,,1]; GG <- image[,,2]; BB <- image[,,3]
   }
-
+  
   if(is.null(Grey)){
     Rmin <- min(R); Rmax <- max(R)
     Gmin <- min(G); Gmax <- max(G)
@@ -71,81 +71,98 @@ image2data <- function(path,
     Gmin <- Rmin <- Bmin <- min(Grey)
     Gmax <- Rmax <- Bmax <- max(Grey)
   }
-
+  
   D <- data.frame(x = rep(1:Dim[2], each = Dim[1]),
                   y = rep(Dim[1]:1, times = Dim[2]),
                   g = rgb(RR, GG, BB))
-
+  
   # alpha ####
   if(Dim[length(Dim)] == 4){
     D <- D[(image[,,4]) >= A, ]
   }
-
+  
   # Select a colour ####
   if(type == "line"){
     crit <- ((RR >= Rmin) & (RR <= Rmax)) *
       ((GG >= Gmin) & (GG <= Gmax)) *
       ((BB >= Bmin) & (BB <= Bmax))
-
-  D <-  D[which(crit == 1), ]
-}
-
-M <- colMeans(D[,c("x", "y")])
-s <- apply(D[,c("x", "y")], MARGIN = 2, sd)
-D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
-                                       MARGIN = 2,
-                                       FUN = function(x){(x-mean(x))/sd(x)})
-)
-
-# reduce ####
-if(reduce != 1){
-
-  if(reduce == "unique"){
-
-    ifelse(precision >= 1 ,
-           D[,c("x", "y")]  <- round(D[,c("x", "y")], precision),
-           D[,c("x", "y")]  <- round(D[,c("x", "y")] * precision, 1)
-    )
-
-    Unique <- unique(D[,c("x","y")])
-    D <- data.frame(x = Unique[, "x"],
-                   y = Unique[, "y"],
-                   g = D[row.names(Unique), "g"])
-
-  } else {
-    if(!is.null(seed)){set.seed(seed)}
-    n <- dim(D)[1]
-    idx <- sample(n,
-                  size = ifelse(reduce >= 1, reduce, n * reduce),
-                  replace = ifelse(reduce > n, TRUE, FALSE))
-    D <- D[idx, ]
+    
+    D <-  D[which(crit == 1), ]
   }
-}
-
-# scaling ####
-if(!scaling){
-  D[,c("x", "y")] <- (D[,c("x", "y")] + M) * s
-} else {
+  
+  M <- colMeans(D[,c("x", "y")])
+  s <- apply(D[,c("x", "y")], MARGIN = 2, sd)
+  D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
+                                         MARGIN = 2,
+                                         FUN = function(x){(x-mean(x))/sd(x)})
+  )
+  
+  # reduce ####
   if(reduce != 1){
+    
+    if(reduce == "unique"){
+      
+      ifelse(precision >= 1 ,
+             D[,c("x", "y")]  <- round(D[,c("x", "y")], precision),
+             D[,c("x", "y")]  <- round(D[,c("x", "y")] * precision, 1)
+      )
+      
+      Unique <- unique(D[,c("x","y")])
+      D <- data.frame(x = Unique[, "x"],
+                      y = Unique[, "y"],
+                      g = D[row.names(Unique), "g"])
+      
+    } else {
+      if(!is.null(seed)){set.seed(seed)}
+      n <- dim(D)[1]
+      idx <- sample(n,
+                    size = ifelse(reduce >= 1, reduce, n * reduce),
+                    replace = ifelse(reduce > n, TRUE, FALSE))
+      D <- D[idx, ]
+    }
+  }
+  
+  # scaling ####
+
+  scaling <- pmatch(scaling, 
+         c("original", "normalized", "standardized"))
+  
+  is.na(scaling){
+    warning("Partial matching of scaling failed. \n 
+            `scaling = standardized` was used. \n 
+            Please verifiy it was intended.")
+    scaling <- "standardized"
+  }
+  
+  if(scaling == "original"){
+    D[,c("x", "y")] <- (D[,c("x", "y")] + M) * s
+    
+  } else if(scaling == "normalized"){
+    D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
+                                           MARGIN = 2,
+                                           FUN = function(x){(x/sum(x^2))})
+                                     )
+    
+  } else if(scaling == "standardized"){
     D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
                                            MARGIN = 2,
                                            FUN = function(x){(x-mean(x))/sd(x)})
-    )
+                                     )
+    
   }
-}
 
-# showplot ####
-if(showplot){
-  plot(x = D$x, y = D$y,
-       xlab = "x",
-       ylab = "y",
-       col = D$g,
-       pch = 16,
-       cex = .5)
-}
-
-rownames(D) <- NULL
-
-return(DATA <- D)
-
+  # showplot ####
+  if(showplot){
+    plot(x = D$x, y = D$y,
+         xlab = "x",
+         ylab = "y",
+         col = D$g,
+         pch = 16,
+         cex = .5)
+  }
+  
+  rownames(D) <- NULL
+  
+  return(DATA <- D)
+  
 }
