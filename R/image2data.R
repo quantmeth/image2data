@@ -123,9 +123,8 @@ image2data <- function(path,
   }
   
   # scaling ####
-
   scaling <- pmatch(scaling, 
-         c("original", "normalized", "standardized"))
+                    c("original", "normalized", "standardized"))
   
   is.na(scaling){
     warning("Partial matching of scaling failed. \n 
@@ -141,28 +140,35 @@ image2data <- function(path,
     D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
                                            MARGIN = 2,
                                            FUN = function(x){(x/sum(x^2))})
-                                     )
+    )
     
   } else if(scaling == "standardized"){
     D[,c("x", "y")] <- as.data.frame(apply(D[,c("x", "y")],
                                            MARGIN = 2,
                                            FUN = function(x){(x-mean(x))/sd(x)})
-                                     )
+    )
     
-  }
-
-  # showplot ####
-  if(showplot){
-    plot(x = D$x, y = D$y,
-         xlab = "x",
-         ylab = "y",
-         col = D$g,
-         pch = 16,
-         cex = .5)
   }
   
   rownames(D) <- NULL
+  D <- structure(D, class = "image2data")
   
+  # showplot ####
+  if(showplot){
+    plot(D)
+  }
+
   return(DATA <- D)
   
 }
+
+plot.image2data <- function(D){
+  plot(x = D$x, y = D$y,
+       xlab = "x",
+       ylab = "y",
+       col = D$g,
+       pch = 16,
+       cex = .5)
+}
+
+
