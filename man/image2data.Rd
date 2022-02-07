@@ -7,7 +7,7 @@
 image2data(
   path,
   type = "fill",
-  scaling = TRUE,
+  scaling = "standardized",
   showplot = TRUE,
   reduce = 1,
   A = 1,
@@ -25,7 +25,7 @@ image2data(
 \item{type}{Type of extraction of data. \code{type = "fill"} (default) returns the complete image as data whereas \code{type = "line"}
 returns a specific range of color (default is black).}
 
-\item{scaling}{Scale the data to a standardized form, \eqn{\mu = 0, \sigma = 1} (default is \code{TRUE}).}
+\item{scaling}{Tranform the data to a specified scale. Three options are available : \code{"standardized", "original", "normalized")}. \code{scaling = "standardized"} converts data in a standardized form, \eqn{\mu = 0, \sigma = 1} (default); \code{scaling = "normalized"} converts data in a normalized form (to unit vectors); and \code{scaling = "original"} keeps the data untransformed.}
 
 \item{showplot}{Show a preliminary plot of the data (default is \code{TRUE}).}
 
