@@ -151,24 +151,19 @@ image2data <- function(path,
   }
   
   rownames(D) <- NULL
-  D <- structure(D, class = "image2data")
-  
+
   # showplot ####
   if(showplot){
-    plot(D)
+    plot(x = D$x, y = D$y,
+         xlab = "x",
+         ylab = "y",
+         col = D$g,
+         pch = 16,
+         cex = .5)
   }
-
+  
   return(DATA <- D)
   
-}
-
-plot.image2data <- function(D){
-  plot(x = D$x, y = D$y,
-       xlab = "x",
-       ylab = "y",
-       col = D$g,
-       pch = 16,
-       cex = .5)
 }
 
 
