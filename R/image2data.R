@@ -126,8 +126,8 @@ image2data <- function(path,
   scaling <- pmatch(scaling, 
                     c("original", "normalized", "standardized"))
   
-  is.na(scaling){
-    warning("Partial matching of scaling failed. \n 
+  if(is.na(scaling)){
+    warning("Partial matching of `scaling` failed. \n 
             `scaling = standardized` was used. \n 
             Please verifiy it was intended.")
     scaling <- "standardized"
