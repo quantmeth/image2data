@@ -1,7 +1,7 @@
 Package: image2data
 Type: Package
 Title: Turn Images into Data Sets
-Version: 1.0.0
+Version: 1.0.1
 Authors@R:
     c(person(given = "P.-O.",
              family = "Caron",
