@@ -23,7 +23,10 @@
 #' @examples
 #' path <- system.file(file.path("extdata", "success.png"), package = "image2data")
 #' image2data(path = path, type = "line")
-#' image2data(path = path, type = "line", Grey = c(0,.50))
+#' image2data(path = path, type = "line", Grey = c(0, .50))
+#' 
+#' path <- system.file(file.path("extdata", "pigeon.png"), package = "image2data")
+#' image2data(path = path, type = "line", Grey = c(0, .50))
 #'
 #' \dontrun{
 #'image2data(path = file.choose())
@@ -46,7 +49,7 @@ image2data <- function(path,
   stopifnot("Incorrect path. The file was not found." = (file.exists(path)))
   
   # Check extension ####
-  extension <- (strsplit(basename(path), split="\\.")[[1]])
+  extension <- tolower(strsplit(basename(path), split="\\.")[[1]])
   extension <- extension[length(extension)]
   stopifnot("Incorrect file. Extension of the image is not compatible. \n
   #          Choose a .jpg, .png, .tiff or .bmp file" =
@@ -89,6 +92,18 @@ image2data <- function(path,
     
     D <-  D[which(crit == 1), ]
   }
+  
+  if(nrow(D) == 0){
+    
+    if(is.null(Grey)){
+      color2change <- "`R`, `G`, `B`."
+    } else {
+      color2change <- "`Grey."
+    }
+    
+     stop(c("No data were returned. Increase the range of ", color2change)) 
+  
+    }
   
   M <- colMeans(D[,c("x", "y")])
   s <- apply(D[,c("x", "y")], MARGIN = 2, sd)
